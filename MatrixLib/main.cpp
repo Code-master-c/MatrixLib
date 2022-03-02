@@ -89,7 +89,7 @@ void end_section() {
 }
 
 
-
+ 
 
 int main() {
 	setlocale(LC_ALL, "rus");
