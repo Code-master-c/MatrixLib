@@ -1,0 +1,8 @@
+﻿  dllmain.cpp
+  MatrixLib.cpp
+C:\Users\Вячеслав\source\repos\DLLMatrixLib\DLLMatrixLib\MatrixLib.cpp(4,6): warning C4273: foo: несовместимое связывание dll
+C:\Users\Вячеслав\source\repos\DLLMatrixLib\DLLMatrixLib\MatrixLib.h(17,31): message : см. предыдущее определение "foo"
+  pch.cpp
+  Создание кода...
+     Создается библиотека C:\Users\Вячеслав\source\repos\DLLMatrixLib\x64\Debug\DLLMatrixLib.lib и объект C:\Users\Вячеслав\source\repos\DLLMatrixLib\x64\Debug\DLLMatrixLib.exp
+  DLLMatrixLib.vcxproj -> C:\Users\Вячеслав\source\repos\DLLMatrixLib\x64\Debug\DLLMatrixLib.dll

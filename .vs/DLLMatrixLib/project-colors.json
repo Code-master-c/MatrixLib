@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "68cec7c6-b9a7-4e45-8628-8d7e2e154131": {
+      "ProjectGuid": "68cec7c6-b9a7-4e45-8628-8d7e2e154131",
+      "DisplayName": "DLLMatrixLib",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}
