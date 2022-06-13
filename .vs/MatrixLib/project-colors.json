@@ -1,6 +1,11 @@
 {
   "Version": 1,
   "ProjectMap": {
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Прочие файлы",
+      "ColorIndex": -1
+    },
     "2c0e04d6-7518-4693-a297-f8b3fc4c7bd2": {
       "ProjectGuid": "2c0e04d6-7518-4693-a297-f8b3fc4c7bd2",
       "DisplayName": "MatrixLib",
