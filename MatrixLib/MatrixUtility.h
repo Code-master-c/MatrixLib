@@ -23,8 +23,8 @@
 /*!
   \brief Cоздает матричый объект размера \f${rows x cols}\f$ типа T (матрицу, вектор-столбец, вектор-строку).
 
-  \details Используется как универсальных интерфейс для создания матричных объектов. 
-  Поскольку RowVector и ColVector имеют конструктор с одним аргументов, в то вермя как Matrix имеет конструктор с двумя параметрами,
+  \details Используется как универсальный интерфейс для создания матричных объектов. 
+  Поскольку RowVector и ColVector имеют конструктор с одним аргументом, в то вермя как Matrix имеет конструктор с двумя параметрами,
   это может вызвать проблемы при написании шаблонного кода. Функция Create имеет два параметра и может создавать
   любые матричные объекты: Matrix, RowVector, ColVector.
 
@@ -33,7 +33,7 @@
 
   \return Матричный объект размера \f${rows x cols}\f$ типа T, заполненный нулями.
 
-  \throw std::exception Если для вектора-строки количество строк было больше 1 или для вектора-столбца количество столбцов было больше 1.
+  \throw InvalidSize Если для вектора-строки количество строк было больше 1 или для вектора-столбца количество столбцов было больше 1.
   Также, если число строк или столбцов было указано нулевым.
 
 */
@@ -42,16 +42,16 @@ template<typename T,
 	typename = std::enable_if_t<(GetT(T, isMatrix)), int>
 >
 auto Create(size_t rows, size_t cols) {
-	if (rows == 0 || cols == 0) throw std::exception(__FUNCSIG__" error: A matrix object should have at least one row and at least one column");
+	if (rows == 0 || cols == 0) throw InvalidSize(__FUNCSIG__" error: A matrix object should have at least one row and at least one column");
 	if constexpr (GetT(T, isMatrixPolicy)) {
 		return T(rows, cols);
 	}
 	else if constexpr (GetT(T, isRowVectorPolicy)) {
-		if (rows != 1) throw std::exception(__FUNCSIG__" error: RowVector must have only one row.");
+		if (rows != 1) throw InvalidSize(__FUNCSIG__" error: RowVector must have only one row.");
 		return T(cols);
 	}
 	else if constexpr (GetT(T, isColVectorPolicy)) {
-		if (cols != 1) throw std::exception(__FUNCSIG__" error: ColVector must have only one col.");
+		if (cols != 1) throw InvalidSize(__FUNCSIG__" error: ColVector must have only one col.");
 		return T(rows);
 	}
 }
@@ -60,7 +60,7 @@ auto Create(size_t rows, size_t cols) {
   \brief Меняет тип матричного объекта приводя его к матрице. Переданный объект не меняется. возвращается новый объект типа Matrix.
 
   \details Основное применение функции - это построение объекта Matrix по RowVector или ColVector.
-  Данная функция осущевствляет конвертацию слудующим образом:
+  Данная функция осущевствляет конвертацию следующим образом:
 	Matrix -> Matrix
 	RowVector -> Matrix
 	ColVector -> Matrix
@@ -90,7 +90,7 @@ auto ToMatrix(const V& v) {
 \return возвращает число - скалярное произведение двух векторов. 
 Тип возвращаемого значение - это общий тип для элементов v1 и v2.
 
-\throw std::exception Если размеры векторов не совпазают.
+\throw std::logic_error Если размеры векторов не совпазают.
 
 */
 
@@ -98,7 +98,7 @@ template<typename V1, typename V2,
 	typename = std::enable_if_t<(GetT(V1, isVectorPolicy), GetT(V2, isVectorPolicy)), int>
 >
 auto ScalarProduct(const V1& v1,const V2& v2) {
-	if (v1.Size() != v2.Size()) throw std::exception("Vectors of different size cannot be multiplied");
+	if (v1.Size() != v2.Size()) throw std::logic_error("Vectors of different size cannot be multiplied");
 	using C = std::common_type_t<GetT(V1, T), GetT(V2, T)>;
 	C res = 0;
 	for (size_t i = 0; i < v1.Size(); i++) {
@@ -122,21 +122,21 @@ auto operator*(const T1& t1,const T2& t2) {
 		GetT(T1, isMatrixPolicy) && GetT(T2, isMatrixPolicy) ||    //матрица * матрица = матрица
 		GetT(T1, isColVectorPolicy) && GetT(T2, isRowVectorPolicy) //вектор-столбец * вектор-строка = матрица
 	) {
-		if (t1.Cols() != t2.Rows()) throw std::exception("Matrices of this size cannot be multiplied");
+		if (t1.Cols() != t2.Rows()) throw InvalidSize("Matrices of this size cannot be multiplied");
 		using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 		Matrix<C> ret(t1.Rows(), t2.Cols());
 
 		MatrixMult
 	}
 	if constexpr (GetT(T1, isMatrixPolicy) && GetT(T2, isColVectorPolicy)) { //матрица  * вектор-столбец = вектор-столбец
-		if (t1.Cols() != t2.Rows()) throw std::exception("Matrices of this size cannot be multiplied");
+		if (t1.Cols() != t2.Rows()) throw InvalidSize("Matrices of this size cannot be multiplied");
 		using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 		ColVector<C> ret(t1.Rows());
 
 		MatrixMult
 	}
 	else if constexpr (GetT(T1, isRowVectorPolicy) && GetT(T2, isMatrixPolicy)) {//вектор-строка * матрица = вектор-строка.
-		if (t1.Cols() != t2.Rows()) throw std::exception("Matrices of this size cannot be multiplied");
+		if (t1.Cols() != t2.Rows()) throw InvalidSize("Matrices of this size cannot be multiplied");
 		using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 		RowVector<C> ret(t2.Cols());
 
@@ -161,7 +161,16 @@ auto operator*(const T1& t1,const T2& t2) {
 	}
 }
 
-
+template<typename T1, typename T2,
+	typename = std::enable_if_t<(GetT(T1, isMatrix) && std::is_arithmetic<typename RowType<T2>::T>::value), int>
+>
+auto operator/(const T1& t1, const T2& t2) {
+	typedef std::common_type_t<GetT(T1, T), typename RowType<T2>::T> C;
+	auto ret = Create<typename ChangeT<C, T1>::T>(t1.Rows(), t1.Cols());
+	for (size_t i = 0; i < t1.Rows(); i++) for (size_t j = 0; j < t1.Cols(); j++)
+		ret.At(i, j) = t1.At(i,j) / t2;
+	return ret;
+}
 /*!
 \brief Транспонирует матричный объект.
 
@@ -205,7 +214,7 @@ template<typename T1, typename T2,
 	typename = std::enable_if_t<(GetT(T1, isMatrix) && GetT(T2, isMatrix)), int>
 >
 auto operator+(const T1& t1,const T2& t2) {
-	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw std::exception(__FUNCSIG__" error: The matrices must be the same size.");
+	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw InvalidSize(__FUNCSIG__" error: The matrices must be the same size.");
 	using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 	using RetT = std::conditional_t<GetT(T1, isMatrixPolicy) || GetT(T2, isMatrixPolicy), 
 		Matrix<C>,
@@ -221,7 +230,7 @@ template<typename T1, typename T2,
 	typename = std::enable_if_t<(GetT(T1, isMatrix) && GetT(T2, isMatrix)), int>
 >
 auto operator-(const T1& t1,const T2& t2) {
-	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw std::exception(__FUNCSIG__" error: The matrices must be the same size.");
+	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw InvalidSize(__FUNCSIG__" error: The matrices must be the same size.");
 	using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 	using RetT = std::conditional_t<GetT(T1, isMatrixPolicy) || GetT(T2, isMatrixPolicy),
 		Matrix<C>,
@@ -241,7 +250,7 @@ auto operator-(const T1& t1,const T2& t2) {
 
 \param[in] t1,t2 матричные объекты.
 
-\throw std::exception Если размер переданных матриц не совпадает.
+\throw InvalidSize Если размер переданных матриц не совпадает.
 
 \return Матрица, полученная при поэлементном умножении матриц t1 и t2. 
 Тип элементов возращаемов матрицы является общим типом для элементов переданных матриц.
@@ -252,7 +261,7 @@ template<typename T1,typename T2,
 >
 auto HadamardProduct(const T1& t1, const T2& t2) {
 	//static_assert(GetT(T1, isMatrix) && GetT(T2, isMatrix));
-	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw std::exception(__FUNCSIG__" error: Hadamard product cannot be applied to matrices of the differ size.");
+	if (t1.Rows() != t2.Rows() || t1.Cols() != t2.Cols()) throw InvalidSize(__FUNCSIG__" error: Hadamard product cannot be applied to matrices of the differ size.");
 	using C = std::common_type_t<GetT(T1, T), GetT(T2, T)>;
 	using RetT = std::conditional_t<GetT(T1, isMatrixPolicy) || GetT(T2, isMatrixPolicy),
 		Matrix<C>,
@@ -271,16 +280,16 @@ auto HadamardProduct(const T1& t1, const T2& t2) {
 
 \param[in] m матричный объект.
 
-\throw std::exception Если переданный объект не является квадратной матрицей.
+\throw std::logic_error Если переданный объект не является квадратной матрицей.
 
-\return След матрицы. Тип возвращаемого значение совпадает с типом элементов матрицы. 
+\return След матрицы. Тип возвращаемого значения совпадает с типом элементов матрицы. 
 
 */
 template<typename T,
 	typename = std::enable_if_t<(GetT(T, isMatrix)), int>
 >
 auto Tr(const T& m) {
-	if (m.Rows() != m.Cols()) throw std::exception(__FUNCSIG__" error: The matrix must be square.");
+	if (m.Rows() != m.Cols()) throw std::logic_error(__FUNCSIG__" error: The matrix must be square.");
 	using C = typename GetT(T, T);
 	C tr = 0;
 	for (size_t i = 0; i < m.Rows(); i++) {
@@ -295,7 +304,7 @@ namespace details {
 
 	template<typename T, typename = std::enable_if_t<(GetT(T, isMatrix)), int> >
 	void RowSum(T&& m, size_t row1, size_t row2, double k = 1) {
-		if (row1 >= m.Rows() || row2 >= m.Rows()) throw std::exception(__FUNCSIG__" error: Index out of ragne.");
+		if (row1 >= m.Rows() || row2 >= m.Rows()) throw std::out_of_range(__FUNCSIG__" error: Index out of ragne.");
 
 		for (size_t i = 0; i < m.Cols(); i++)
 			m.At(row1, i) = m.At(row1, i) + k * m.At(row2, i);
@@ -304,7 +313,7 @@ namespace details {
 
 	template<typename T, typename = std::enable_if_t<(GetT(T, isMatrix)), int> >
 	void SwapRows(T&& m, size_t row1, size_t row2) {
-		if (row1 >= m.Rows() || row2 >= m.Rows()) throw std::exception(__FUNCSIG__" error: Index out of ragne.");
+		if (row1 >= m.Rows() || row2 >= m.Rows()) throw std::out_of_range(__FUNCSIG__" error: Index out of ragne.");
 		if (row1 == row2) return;
 		for (size_t i = 0; i < m.Cols(); i++)
 			std::swap(m.At(row1, i), m.At(row2, i));
@@ -312,13 +321,38 @@ namespace details {
 
 	template<typename T, typename = std::enable_if_t<(GetT(T, isMatrix)), int> >
 	void RowDivision(T&& m, size_t row, double k) {
-		if (row >= m.Rows()) throw std::exception(__FUNCSIG__" error: Index out of ragne.");
-		if (k == 0) throw std::exception(__FUNCSIG__" error: Division by zero");
+		if (row >= m.Rows()) throw std::out_of_range(__FUNCSIG__" error: Index out of ragne.");
+		if (k == 0) throw std::overflow_error(__FUNCSIG__" error: Division by zero");
 		if (k == 1) return;
 		for (size_t i = 0; i < m.Cols(); i++)
 			m.At(row, i) /= k;
 	}
 
+}
+
+template<typename T, typename = std::enable_if_t<(GetT(T, isMatrix)), int>>
+double Mean(T&& m) {
+	double mean = 0.0;
+	for (size_t i = 0; i < m.Rows(); i++)
+		for (size_t j = 0; j < m.Cols(); j++)
+			mean += m.At(i, j);
+	return mean / (m.Rows() * m.Cols());
+}
+
+template<typename T, typename = std::enable_if_t<(GetT(T, isMatrix)), int>>
+double Dispersion(T&& m) {
+	double mean = Mean(m);
+	//RowVector<double> temp(m.Rows() * m.Cols());
+	double s = 0.0;
+	for (size_t i = 0; i < m.Rows(); i++)
+		for (size_t j = 0; j < m.Cols(); j++)
+			s += (m.At(i, j) - mean) * (m.At(i, j) - mean);
+
+
+
+	double mean_2 = s / (m.Size() - 1);
+
+	return sqrt(mean_2);
 }
 
 /*!
@@ -332,7 +366,7 @@ namespace details {
 \param[out] rank ранг матрицы.
 
 
-\return Матрицы, упрощенная методом Гаусса.
+\return Матрица, упрощенная методом Гаусса.
 */
 template<typename M, 
 	typename = std::enable_if_t<(GetT(M, isMatrix)), int>
@@ -540,9 +574,9 @@ template<typename M,
 >
 auto SubMatrix(const M& m, EntryPosition beg, EntryPosition end) {
 	if (beg.col >= m.Cols() || beg.row >= m.Rows() || end.col >= m.Cols() || end.row >= m.Rows()) 
-		throw std::exception(__FUNCSIG__" error: Index out of ragne.");
+		throw std::out_of_range(__FUNCSIG__" error: Index out of ragne.");
 	if (beg.col > end.col || beg.row > end.row) 
-		throw std::exception(__FUNCSIG__" error: The range was incorrect.");
+		throw std::logic_error(__FUNCSIG__" error: The range was incorrect.");
 
 	typename RowType<M>::T sub(end.row - beg.row + 1, end.col - beg.col + 1);
 
@@ -592,7 +626,7 @@ auto Assign(const T1& m1,const T2& m2) {
 */
 template<typename M, typename = std::enable_if_t<(GetT(M, isMatrix)), int>>
 auto Inverse(const M& m) {
-	if (m.Rows() != m.Cols()) std::exception(__FUNCSIG__" error: Inverse matrix cannot be found for not square matrix.");
+	if (m.Rows() != m.Cols()) std::logic_error(__FUNCSIG__" error: Inverse matrix cannot be found for not square matrix.");
 	auto reduced = RowReduce(Assign(m, Identity<GetT(M, T)>(m.Rows())));
 
 	auto r = Rg(SubMatrix(m, EntryPosition{ 0, 0 }, EntryPosition{ m.Rows() - 1, m.Cols() - 1 }));

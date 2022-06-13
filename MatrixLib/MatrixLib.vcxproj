@@ -140,14 +140,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="MatrixExeption.h" />
     <ClInclude Include="MatrixUtility.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="MatrixTraits.h" />
+    <ClInclude Include="PCA.h" />
     <ClInclude Include="Policy.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PCA.cpp" />
+    <ClCompile Include="PCAtest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="PCAtest2.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -23,7 +23,7 @@ std::ostream& operator<<(std::ostream& out, const Matrix<T, IndexingPolicy>& m) 
 	for (size_t i = 0; i < m.Rows(); i++) {
 		out << "\t";
 		for (size_t j = 0; j < m.Cols(); j++) {
-			out << std::setw(2) <<  m.At(i, j) << " ";
+			out << std::setw(7) << std::setprecision(7) <<  m.At(i, j) << " ";
 		}
 		out << "\n";
 	}
